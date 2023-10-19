@@ -1,0 +1,38 @@
+# Stage 1: Build your Node.js application
+FROM node:14 AS build
+
+# Set the working directory in the container
+WORKDIR /app
+
+# Copy package.json and package-lock.json to the working directory
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy the rest of the application files
+COPY . .
+
+# Stage 2: Create the final image with Node.js, Tini, and your application
+FROM node:14-alpine
+
+# Install Tini
+RUN apk add --no-cache tini
+
+# Copy the built application from the previous stage
+COPY --from=build /app /app
+
+# Set the working directory in the container
+WORKDIR /app
+
+# Expose port 3000 for the Express.js app
+EXPOSE 3000
+
+# Run your program under Tini
+ENTRYPOINT ["/sbin/tini", "--"]
+
+# Specify the default command to run your app (replace "start" with your actual command)
+CMD ["npm", "run", "start"]
+
+# Run your program under Tini
+# ENTRYPOINT ["/sbin/tini", "--", "npm", "run", "start"]
